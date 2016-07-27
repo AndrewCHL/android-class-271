@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="storeInfos">
+        <item>National Taiwan University</item>
+        <item>UC San Diego</item>
+        <item>UC Berkeley</item>
+        <item>Stanford</item>
+    </string-array>
+</resources>
