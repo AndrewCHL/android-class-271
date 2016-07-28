@@ -1,8 +1,10 @@
 package com.example.andrew.simpleui;
 
+import android.content.Intent;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -20,6 +22,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+
+    final static int REQUEST_CODE_DRINK_MENU_ACTIVITY = 0;
 
     String name = "";
     String drink = "black tea";
@@ -81,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
 
         setUpSpinner();
 
+        Log.d("debug", "MainActivity OnCreate");
+
     }
 
     private void setUpSpinner() {
@@ -102,5 +108,63 @@ public class MainActivity extends AppCompatActivity {
 
         setUpListView();
 
+    }
+
+    public void goToMenu(View view) {
+        Intent intent = new Intent(); // used to call another activity process
+        intent.setClass(this, DrinkMenuActivity.class); // call from this activity to another
+
+        startActivityForResult(intent, REQUEST_CODE_DRINK_MENU_ACTIVITY);
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_DRINK_MENU_ACTIVITY) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Done", Toast.LENGTH_LONG).show();
+            }
+            if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "Cancel", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("debug", "MainActivity OnStart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("debug", "MainActivity OnResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d("debug", "MainActiity OnPause");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d("debug", "MainActivity OnStop");
+
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d("debug", "MainActivity OnRestart");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("debug", "MainAcitvity OnDestroy");
     }
 }
