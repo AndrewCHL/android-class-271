@@ -1,6 +1,11 @@
 package com.example.andrew.simpleui;
 
+import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.support.v4.app.FragmentManager;
+import android.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,7 +16,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class DrinkMenuActivity extends AppCompatActivity {
+public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDialog.OnDrinkOrderListener {
 
     int sum = 0;
     ListView lview;
@@ -25,11 +30,51 @@ public class DrinkMenuActivity extends AppCompatActivity {
     ArrayList<Drink> drinkList = new ArrayList<>();
     ArrayList<Drink> drinkSelected = new ArrayList<>();
 
-    public class Drink {
+    @Override
+    public void onDrinkOrderFinished() {
+
+    }
+
+    public class Drink implements Parcelable {
         String name;
         int priveM;
         int priveL;
         int imageId;
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(this.name);
+            dest.writeInt(this.priveM);
+            dest.writeInt(this.priveL);
+            dest.writeInt(this.imageId);
+        }
+
+        public Drink() {
+        }
+
+        protected Drink(Parcel in) {
+            this.name = in.readString();
+            this.priveM = in.readInt();
+            this.priveL = in.readInt();
+            this.imageId = in.readInt();
+        }
+
+        public final Parcelable.Creator<Drink> CREATOR = new Parcelable.Creator<Drink>() {
+            @Override
+            public Drink createFromParcel(Parcel source) {
+                return new Drink(source);
+            }
+
+            @Override
+            public Drink[] newArray(int size) {
+                return new Drink[size];
+            }
+        };
     }
 
     @Override
@@ -47,7 +92,8 @@ public class DrinkMenuActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                drinkSelected.add((Drink) adapterView.getAdapter().getItem(i));
+                Drink drink = (Drink) adapterView.getAdapter().getItem(i);
+                showDrinkOrderDialog(drink); // New!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 sum += ((Drink) adapterView.getAdapter().getItem(i)).priveM;
                 tView.setText(String.valueOf(sum));
             }
@@ -55,6 +101,14 @@ public class DrinkMenuActivity extends AppCompatActivity {
 
 
         Log.d("debug", "DrinkMenuActivity OnCreate");
+    }
+
+    private void showDrinkOrderDialog(Drink drink){
+        android.app.FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction ft = fragmentManager.beginTransaction();
+        DrinkOrderDialog dialog = DrinkOrderDialog.newInstance(drink);
+
+        dialog.show(ft, "DrinkOrderDialog");
     }
 
     private void setDrinkList() {
