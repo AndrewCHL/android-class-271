@@ -19,7 +19,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.parse.FindCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.SaveCallback;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -83,8 +92,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Order temp = (Order) adapterView.getAdapter().getItem(i);
-                Toast.makeText(MainActivity.this, "You select: " + temp.note, Toast.LENGTH_SHORT).show();
-                Snackbar.make(adapterView, "You select: " + temp.note, Snackbar.LENGTH_SHORT).
+                Toast.makeText(MainActivity.this, "You select: " + temp.getNote(), Toast.LENGTH_SHORT).show();
+                Snackbar.make(adapterView, "You select: " + temp.getNote(), Snackbar.LENGTH_SHORT).
                         setAction("OK", new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -97,24 +106,70 @@ public class MainActivity extends AppCompatActivity {
         spn.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                editor.putInt("spinner",spn.getSelectedItemPosition());
+                editor.putString("spinner",String.valueOf(spn.getSelectedItemPosition()));
                 editor.apply();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                editor.putInt("spinner",spn.getSelectedItemPosition());
+                editor.putString("spinner",String.valueOf(spn.getSelectedItemPosition()));
                 editor.apply();
             }
         });
 
+        //setUpOrderHistory();
 
         setUpSpinner();
 
         restoreUIState();
 
+        setUpListView();
+
+        /*
+        ParseObject parseObject = new ParseObject("TestObject");//upload to this table or create one
+        parseObject.put("foo","Andrew");
+        parseObject.saveInBackground(new SaveCallback() {
+            @Override
+            public void done(ParseException e) {
+                if(e == null){
+                    Toast.makeText(MainActivity.this,"success", Toast.LENGTH_SHORT).show();
+                } else{
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this,"fail",Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("TestObject");
+        query.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> objects, ParseException e) {
+                for(ParseObject each: objects){
+                    Toast.makeText(MainActivity.this, each.getString("foo"), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        */
+
         Log.d("debug", "MainActivity OnCreate");
 
+    }
+
+    private void setUpOrderHistory() {
+        String orderData = Utils.readFile(this, "history");
+        String[] orderDataArray = orderData.split("\n");
+        Gson gson = new Gson();
+
+        for(String each: orderDataArray){
+            try{
+                Order order = gson.fromJson(each, Order.class);
+                if( order != null){
+                    orders.add(order);
+                }
+            }catch(JsonSyntaxException e){
+
+            }
+        }
     }
 
     private void restoreUIState(){
@@ -132,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        spn.setSelection(sharedPreferences.getInt("spinner",1));
+        spn.setSelection(Integer.valueOf(sharedPreferences.getString("spinner","")));
     }
 
     private void setUpSpinner() {
@@ -147,10 +202,16 @@ public class MainActivity extends AppCompatActivity {
     public void submit(View view) {
 
         Order newOrder = new Order();
-        newOrder.drinkOrders = drinkOrders;
-        newOrder.note = edtText.getText().toString();
-        newOrder.storeInfo = (String) spn.getSelectedItem();
+        newOrder.setDrinkOrders(drinkOrders);
+        newOrder.setNote(edtText.getText().toString());
+        newOrder.setStoreInfo((String) spn.getSelectedItem());
         orders.add(newOrder);
+
+        Gson gson = new Gson();
+        String orderData = gson.toJson(newOrder);
+
+        Utils.writeFile(this, "history", orderData + "\n");
+
 
         drinkOrders = new ArrayList<>();
         // Reset the list after adding into order

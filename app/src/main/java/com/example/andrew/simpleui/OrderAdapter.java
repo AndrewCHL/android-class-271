@@ -65,8 +65,8 @@ public class OrderAdapter extends BaseAdapter {
 
         }
 
-        holder.noteTextView.setText(orders.get(i).note);
-        holder.storeInfoTextView.setText(orders.get(i).storeInfo);
+        holder.noteTextView.setText(orders.get(i).getNote());
+        holder.storeInfoTextView.setText(orders.get(i).getStoreInfo());
         holder.drinkTexiView.setText(String.valueOf(orders.get(i).total()));
 
         return view;
