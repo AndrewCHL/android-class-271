@@ -15,10 +15,10 @@ import java.util.List;
  */
 public class DrinkAdapter extends BaseAdapter {
 
-    List<DrinkMenuActivity.Drink> drinkList;
+    List<Drink> drinkList;
     LayoutInflater inflater;
 
-    public DrinkAdapter(Context context, List<DrinkMenuActivity.Drink> list){
+    public DrinkAdapter(Context context, List<Drink> list){
         // context is Activity
 
         this.drinkList = list;

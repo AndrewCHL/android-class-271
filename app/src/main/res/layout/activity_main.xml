@@ -42,7 +42,7 @@
         android:orientation="horizontal"
         android:layout_alignParentEnd="false"
         android:id="@+id/radioGroup"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <RadioButton
             android:layout_width="wrap_content"

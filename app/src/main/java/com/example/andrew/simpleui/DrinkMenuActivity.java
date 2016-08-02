@@ -18,7 +18,6 @@ import java.util.ArrayList;
 
 public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDialog.OnDrinkOrderListener {
 
-    int sum = 0;
     ListView lview;
     TextView tView;
 
@@ -28,54 +27,24 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
     int[] imageId = {R.drawable.drink1, R.drawable.drink2, R.drawable.drink3, R.drawable.drink4};
 
     ArrayList<Drink> drinkList = new ArrayList<>();
-    ArrayList<Drink> drinkSelected = new ArrayList<>();
+    ArrayList<DrinkOrder> drinkSelected = new ArrayList<>();
+
 
     @Override
-    public void onDrinkOrderFinished() {
+    public void onDrinkOrderFinished(DrinkOrder drinkOrder) {
 
+        for(int i = 0; i < drinkSelected.size(); ++i){
+            if(drinkSelected.get(i).drink.name.equals(drinkOrder.drink.name)) {
+                drinkSelected.set(i, drinkOrder);
+                setupTotalTextView();
+                return;
+            }
+        }
+        drinkSelected.add(drinkOrder);
+        setupTotalTextView();
     }
 
-    public class Drink implements Parcelable {
-        String name;
-        int priveM;
-        int priveL;
-        int imageId;
 
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(this.name);
-            dest.writeInt(this.priveM);
-            dest.writeInt(this.priveL);
-            dest.writeInt(this.imageId);
-        }
-
-        public Drink() {
-        }
-
-        protected Drink(Parcel in) {
-            this.name = in.readString();
-            this.priveM = in.readInt();
-            this.priveL = in.readInt();
-            this.imageId = in.readInt();
-        }
-
-        public final Parcelable.Creator<Drink> CREATOR = new Parcelable.Creator<Drink>() {
-            @Override
-            public Drink createFromParcel(Parcel source) {
-                return new Drink(source);
-            }
-
-            @Override
-            public Drink[] newArray(int size) {
-                return new Drink[size];
-            }
-        };
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +55,11 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
         tView = (TextView) findViewById(R.id.textViewMoney);
 
         setDrinkList();
+
+        drinkSelected = getIntent().getParcelableArrayListExtra("drinkOrderList");
+
+        setupTotalTextView();
+
         setUpListView();
 
         lview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -93,9 +67,8 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
                 Drink drink = (Drink) adapterView.getAdapter().getItem(i);
-                showDrinkOrderDialog(drink); // New!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                sum += ((Drink) adapterView.getAdapter().getItem(i)).priveM;
-                tView.setText(String.valueOf(sum));
+                showDrinkOrderDialog(drink);
+                setupTotalTextView();
             }
         });
 
@@ -103,10 +76,30 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
         Log.d("debug", "DrinkMenuActivity OnCreate");
     }
 
+    private void setupTotalTextView(){
+
+        int sum = 0;
+
+        for(DrinkOrder each: drinkSelected){
+            sum += each.total();
+        }
+        tView.setText(String.valueOf(sum));
+    }
+
     private void showDrinkOrderDialog(Drink drink){
+        DrinkOrder order = new DrinkOrder(drink);
+
+        for(DrinkOrder each: drinkSelected){
+            if(each.drink.name.equals(drink.name)){
+                order = each;
+
+                break;
+            }
+        }
+
         android.app.FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction ft = fragmentManager.beginTransaction();
-        DrinkOrderDialog dialog = DrinkOrderDialog.newInstance(drink);
+        DrinkOrderDialog dialog = DrinkOrderDialog.newInstance(order);
 
         dialog.show(ft, "DrinkOrderDialog");
     }
@@ -129,6 +122,7 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
 
     public void done(View view) {
         Intent intent = new Intent();
+        intent.putExtra("results",drinkSelected);
         setResult(RESULT_OK, intent);
         finish();
     }
