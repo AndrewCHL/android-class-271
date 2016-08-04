@@ -2,10 +2,6 @@ package com.example.andrew.simpleui;
 
 import android.app.FragmentTransaction;
 import android.content.Intent;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.support.v4.app.FragmentManager;
-import android.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,7 +10,11 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.parse.FindCallback;
+import com.parse.ParseException;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDialog.OnDrinkOrderListener {
 
@@ -26,7 +26,7 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
     int[] drinkPriceL = {6, 6, 7, 4};
     int[] imageId = {R.drawable.drink1, R.drawable.drink2, R.drawable.drink3, R.drawable.drink4};
 
-    ArrayList<Drink> drinkList = new ArrayList<>();
+    List<Drink> drinkList = new ArrayList<>();
     ArrayList<DrinkOrder> drinkSelected = new ArrayList<>();
 
 
@@ -34,7 +34,7 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
     public void onDrinkOrderFinished(DrinkOrder drinkOrder) {
 
         for(int i = 0; i < drinkSelected.size(); ++i){
-            if(drinkSelected.get(i).drink.name.equals(drinkOrder.drink.name)) {
+            if(drinkSelected.get(i).getDrink().getObjectId().equals(drinkOrder.getDrink().getObjectId())) {
                 drinkSelected.set(i, drinkOrder);
                 setupTotalTextView();
                 return;
@@ -60,7 +60,6 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
 
         setupTotalTextView();
 
-        setUpListView();
 
         lview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -90,7 +89,7 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
         DrinkOrder order = new DrinkOrder(drink);
 
         for(DrinkOrder each: drinkSelected){
-            if(each.drink.name.equals(drink.name)){
+            if(each.getDrink().getObjectId().equals(drink.getObjectId())){
                 order = each;
 
                 break;
@@ -105,19 +104,22 @@ public class DrinkMenuActivity extends AppCompatActivity implements DrinkOrderDi
     }
 
     private void setDrinkList() {
-        for (int i = 0; i < drinkName.length; ++i) {
-            Drink drink = new Drink();
-            drink.name = drinkName[i];
-            drink.priveM = drinkPriceM[i];
-            drink.priveL = drinkPriceL[i];
-            drink.imageId = imageId[i];
-            drinkList.add(drink);
-        }
+
+        Drink.getQuery().findInBackground(new FindCallback<Drink>() {
+            @Override
+            public void done(List<Drink> objects, ParseException e) {
+                if(e == null){
+                    drinkList = objects;
+                    setUpListView();
+                }
+            }
+        });
+
     }
 
     private void setUpListView() {
 
-        lview.setAdapter(new DrinkAdapter(this, drinkList));
+            lview.setAdapter(new DrinkAdapter(this, drinkList));
     }
 
     public void done(View view) {

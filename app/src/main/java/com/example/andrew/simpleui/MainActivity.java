@@ -44,8 +44,9 @@ public class MainActivity extends AppCompatActivity {
     Spinner spn;
 
 
-    ArrayList<Order> orders = new ArrayList<Order>();
+    List<Order> orders = new ArrayList<Order>();
     ArrayList<DrinkOrder> drinkOrders = new ArrayList<>();
+    ArrayList<String> data = new ArrayList<>();
 
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
@@ -92,7 +93,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Order temp = (Order) adapterView.getAdapter().getItem(i);
-                Toast.makeText(MainActivity.this, "You select: " + temp.getNote(), Toast.LENGTH_SHORT).show();
+                goToOrderDetail(temp);
+                //Toast.makeText(MainActivity.this, "You select: " + temp.getNote(), Toast.LENGTH_SHORT).show();
+                /*
                 Snackbar.make(adapterView, "You select: " + temp.getNote(), Snackbar.LENGTH_SHORT).
                         setAction("OK", new View.OnClickListener() {
                             @Override
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
                             }
                         }).show();
+                */
             }
         });
 
@@ -117,13 +121,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //setUpOrderHistory();
+        setUpOrderHistory();
 
-        setUpSpinner();
+
 
         restoreUIState();
 
-        setUpListView();
+        //setUpListView();
 
         /*
         ParseObject parseObject = new ParseObject("TestObject");//upload to this table or create one
@@ -139,23 +143,38 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        */
 
-        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("TestObject");
+        ParseQuery<ParseObject> query = new ParseQuery<ParseObject>("StoreInfo");
         query.findInBackground(new FindCallback<ParseObject>() {
             @Override
             public void done(List<ParseObject> objects, ParseException e) {
+
+                data = new ArrayList<String>();
                 for(ParseObject each: objects){
-                    Toast.makeText(MainActivity.this, each.getString("foo"), Toast.LENGTH_SHORT).show();
+                    data.add(each.getString("name")+","+each.getString("address"));
                 }
+                setUpSpinner();
             }
         });
-        */
+
+
 
         Log.d("debug", "MainActivity OnCreate");
 
     }
 
+    public void goToOrderDetail(Order order){
+        Intent intent = new Intent();
+        intent.setClass(this, OrderDetailActivity.class);
+        intent.putExtra("Order",order);
+        startActivity(intent);
+
+
+    }
+
     private void setUpOrderHistory() {
+        /*
         String orderData = Utils.readFile(this, "history");
         String[] orderDataArray = orderData.split("\n");
         Gson gson = new Gson();
@@ -170,6 +189,16 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+        */
+        Order.getOrdersFromLocalThenRemote(new FindCallback<Order>() {
+            @Override
+            public void done(List<Order> objects, ParseException e) {
+                if(e == null){
+                    orders = objects;
+                    setUpListView();
+                }
+            }
+        });
     }
 
     private void restoreUIState(){
@@ -191,7 +220,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpSpinner() {
-        String[] data = getResources().getStringArray(R.array.storeInfos);
+
+        //String[] data = getResources().getStringArray(R.array.storeInfos);
         spn.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, data));
     }
 
@@ -205,12 +235,20 @@ public class MainActivity extends AppCompatActivity {
         newOrder.setDrinkOrders(drinkOrders);
         newOrder.setNote(edtText.getText().toString());
         newOrder.setStoreInfo((String) spn.getSelectedItem());
+
+        Log.d("debug", "Spinner Selection "+ (String)spn.getSelectedItem());
+
         orders.add(newOrder);
 
+        newOrder.saveEventually(); //Save file to remote
+
+
+        /*
         Gson gson = new Gson();
         String orderData = gson.toJson(newOrder);
 
         Utils.writeFile(this, "history", orderData + "\n");
+        */
 
 
         drinkOrders = new ArrayList<>();

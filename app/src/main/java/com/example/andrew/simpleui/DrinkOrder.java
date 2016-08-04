@@ -4,7 +4,9 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.parse.ParseClassName;
+import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
 
 /**
  * Created by Andrew on 8/1/16.
@@ -19,15 +21,19 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     static final String SUGAR_COL = "sugar";
     static final String NOTE_COL = "note";
 
+    public DrinkOrder(){
+        super();
+    }
 
 
-    public DrinkOrder(Drink drink){
+    public DrinkOrder(Drink drink) {
+        super();
         this.setDrink(drink);
     }
 
-    public int total(){
+    public int total() {
 
-        return getDrink().priveL*getlNumber() + getDrink().priveM* getmNumber();
+        return getDrink().getPriceL() * getlNumber() + getDrink().getPriceM() * getmNumber();
     }
 
     @Override
@@ -38,7 +44,7 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
 
-        if(getObjectId() == null){
+        if (getObjectId() == null) {
             dest.writeInt(0);
             dest.writeParcelable(this.getDrink(), flags);
             dest.writeInt(this.getmNumber());
@@ -46,7 +52,7 @@ public class DrinkOrder extends ParseObject implements Parcelable {
             dest.writeString(this.getIce());
             dest.writeString(this.getSugar());
             dest.writeString(this.getNote());
-        }else {
+        } else {
             dest.writeInt(1);
             dest.writeString(getObjectId());
         }
@@ -55,10 +61,11 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     }
 
     protected DrinkOrder(Parcel in) {
-        this.setDrink(in.readParcelable(Drink.class.getClassLoader()));
+        super();
+        this.setDrink((Drink) in.readParcelable(Drink.class.getClassLoader()));
         this.setmNumber(in.readInt());
         this.setlNumber(in.readInt());
-        this.setIce(in.readString()) ;
+        this.setIce(in.readString());
         this.setSugar(in.readString());
         this.setNote(in.readString());
     }
@@ -67,10 +74,10 @@ public class DrinkOrder extends ParseObject implements Parcelable {
         @Override
         public DrinkOrder createFromParcel(Parcel source) {
             int isDraft = source.readInt();
-            if(isDraft == 0) {
+            if (isDraft == 0) {
                 return new DrinkOrder(source);
             } else {
-
+                return getDrinkOrderFromCashe(source.readString());
             }
         }
 
@@ -80,12 +87,29 @@ public class DrinkOrder extends ParseObject implements Parcelable {
         }
     };
 
+    public static ParseQuery<DrinkOrder> getQuery() {
+        return ParseQuery.getQuery(DrinkOrder.class);
+    }
+
+    public static DrinkOrder getDrinkOrderFromCashe(String objectID) {
+        try {
+            DrinkOrder drinkOrder = getQuery()
+                    .fromLocalDatastore().get(objectID);
+
+            return drinkOrder;
+        } catch (ParseException e) {
+            e.printStackTrace();
+
+        }
+        return DrinkOrder.createWithoutData(DrinkOrder.class, objectID);
+    }
+
     public Drink getDrink() {
-        return getParseObject(DRINK_COL);
+        return (Drink) getParseObject(DRINK_COL);
     }
 
     public void setDrink(Drink drink) {
-        put(DRINK_COL,drink);
+        put(DRINK_COL, drink);
     }
 
     public int getmNumber() {
@@ -93,7 +117,7 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     }
 
     public void setmNumber(int mNumber) {
-        put(MNUMBER_COL,mNumber);
+        put(MNUMBER_COL, mNumber);
     }
 
     public int getlNumber() {
@@ -101,7 +125,7 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     }
 
     public void setlNumber(int lNumber) {
-        put(LNUMBER_COL,lNumber);
+        put(LNUMBER_COL, lNumber);
     }
 
     public String getIce() {
@@ -109,7 +133,7 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     }
 
     public void setIce(String ice) {
-        put(ICE_COL,ice);
+        put(ICE_COL, ice);
     }
 
     public String getSugar() {
@@ -117,7 +141,7 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     }
 
     public void setSugar(String sugar) {
-        put(SUGAR_COL,sugar);
+        put(SUGAR_COL, sugar);
     }
 
     public String getNote() {
@@ -125,6 +149,6 @@ public class DrinkOrder extends ParseObject implements Parcelable {
     }
 
     public void setNote(String note) {
-        put(NOTE_COL,note);
+        put(NOTE_COL, note);
     }
 }
